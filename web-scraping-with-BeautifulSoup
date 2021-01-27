@@ -1,0 +1,57 @@
+##Chocolate Scraping with Beautiful Soup
+###You’ve found a website that has over 1700 reviews of chocolate bars from all around the world. 
+
+import codecademylib3_seaborn
+from bs4 import BeautifulSoup
+import requests
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+
+webpage = requests.get("https://content.codecademy.com/courses/beautifulsoup/cacao/index.html")
+soup = BeautifulSoup(webpage.content, "html.parser")
+
+#put all ratings into a list and make a histogram
+
+all_ratings_tags = soup.find_all(attrs={"class": "Rating"})
+ratings = []
+
+for tag in all_ratings_tags[1:]:
+  ratings.append(float(tag.get_text()))
+
+plt.hist(ratings) 
+plt.show()
+
+#find the 10 most highly rated chocolatiers
+
+company_tags = soup.select(".Company")
+company_names = []
+
+for tag in company_tags[1:]:
+  company_names.append(tag.get_text())
+
+d = {"Company": company_names, "Rating": ratings}  
+chocolatiers = pd.DataFrame.from_dict(d)
+
+mean = chocolatiers.groupby("Company").Rating.mean()
+ten_best = mean.nlargest(10)
+print(ten_best)
+
+#We want to see if the chocolate experts tend to rate chocolate bars with higher levels of cacao to be better than those with lower levels of cacao.
+
+cocoa_percent = soup.select(".CocoaPercent")
+cocoa_contents = []
+for tag in cocoa_percent[1:]:
+  percent = float(tag.get_text().strip('%'))
+  cocoa_contents.append(percent)
+
+d = {"CocoaPercentage": cocoa_contents, "Company": company_names, "Rating": ratings}
+df = pd.DataFrame.from_dict(d)
+
+plt.clf()
+plt.scatter(df.CocoaPercentage, df.Rating)
+z = np.polyfit(df.CocoaPercentage, df.Rating, 1)
+line_function = np.poly1d(z)
+plt.plot(df.CocoaPercentage, line_function(df.CocoaPercentage), "r--")
+plt.show()
+

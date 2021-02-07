@@ -1,0 +1,57 @@
+#Our favorite online shoe store, ShoeFly.com is performing an A/B Test. 
+#They have two different versions of an ad, which they have placed in emails, as well as in banner ads on Facebook, Twitter, and Google. 
+#They want to know how the two ads are performing on each of the different platforms on each day of the week.
+
+import codecademylib
+import pandas as pd
+
+ad_clicks = pd.read_csv('ad_clicks.csv')
+print(ad_clicks.head())
+
+#Where do most views come from
+views_by_source = ad_clicks.groupby('utm_source').user_id.count().reset_index()
+print(views_by_source)
+
+#If the column ad_click_timestamp is not null, then someone actually clicked on the ad that was displayed.
+ad_clicks['is_click'] = ~ad_clicks.ad_click_timestamp.isnull()
+print(ad_clicks.head())
+
+#We want to know the percent of people who clicked on ads from each utm_source
+clicks_by_source = ad_clicks.groupby(['utm_source', 'is_click']).user_id.count().reset_index()
+print(clicks_by_source)
+
+#pivot the data
+clicks_pivot = clicks_by_source.pivot(index='utm_source', columns='is_click', values='user_id').reset_index()
+print(clicks_pivot)
+
+clicks_pivot['percent_clicked'] = clicks_pivot[True]/(clicks_pivot[True] + clicks_pivot[False]).round(2)
+print(clicks_pivot)
+
+############
+#A/B test
+
+count_ab = ad_clicks.groupby('experimental_group').user_id.count().reset_index()
+print(count_ab)
+
+percentage_ab = pd.crosstab(ad_clicks['is_click'], ad_clicks['experimental_group'], normalize='columns')
+print(percentage_ab)
+
+#create two pivot tables and compare percentages
+
+a_clicks = ad_clicks[ad_clicks.experimental_group == 'A']
+b_clicks = ad_clicks[ad_clicks.experimental_group == 'B']
+
+a_pcnt_click_by_day = a_clicks.groupby(['is_click', 'day']).user_id.count().reset_index()
+
+b_pcnt_click_by_day = b_clicks.groupby(['is_click', 'day']).user_id.count().reset_index()
+
+print(a_pcnt_click_by_day, b_pcnt_click_by_day)
+
+a_pivot = a_pcnt_click_by_day.pivot(columns='is_click' , index='day', values='user_id').reset_index()
+b_pivot = b_pcnt_click_by_day.pivot(columns='is_click' , index='day', values='user_id').reset_index()
+print(a_pivot)
+
+a_pivot['a_percent_by_day'] = a_pivot[True]/(a_pivot[True]+a_pivot[False])
+b_pivot['b_percent_by_day'] = b_pivot[True]/(b_pivot[True]+b_pivot[False])
+
+print(a_pivot, b_pivot)

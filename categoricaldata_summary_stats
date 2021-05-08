@@ -1,0 +1,35 @@
+import pandas as pd
+import numpy as np
+
+car_eval = pd.read_csv('car_eval_dataset.csv')
+print(car_eval.head())
+
+manufacturer_country = car_eval.manufacturer_country.value_counts()
+print(manufacturer_country)
+
+manufacturer_country_p = car_eval.manufacturer_country.value_counts(normalize=True)
+print(manufacturer_country_p)
+
+buying_cost = car_eval.buying_cost.value_counts()
+print(buying_cost)
+
+#ordinal data
+
+buying_cost_categories = ['low', 'med', 'high', 'vhigh']
+car_eval['buying_cost'] = pd.Categorical(car_eval['buying_cost'],buying_cost_categories, ordered=True)
+
+median_cat = np.median(car_eval['buying_cost'].cat.codes)
+print(median_cat)
+median = buying_cost_categories[int(median_cat)]
+print(median)
+
+luggage = car_eval.luggage.value_counts(dropna=False, normalize=True)
+print(luggage)
+
+#cars with 5 doors
+
+fivedoor = (car_eval['doors'] == '5more').sum()
+print(fivedoor)
+#proportion
+fivedoor_p =  (car_eval['doors'] == '5more').mean()
+print(fivedoor_p)
